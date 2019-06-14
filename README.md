@@ -23,6 +23,8 @@ Configurable within your .vimrc:
 Either by defining a style:
 
     let g:HiCursorWords_style='term=reverse cterm=reverse gui=reverse'
+    or
+    let g:HiCursorWords_style='ctermfg=fg ctermbg=bg cterm=underline'
 
 or linking to an existing one
 
@@ -63,12 +65,16 @@ Just put this file into the **plugin** directory.
 
 Or clone it into your bundle-path and use with pathogen.
 
-    git clone https://github.com/pboettch/vim-highlight-cursor-words.git ~/.vimrc/bundle/vim-highlight-cursor-words
+    git clone https://github.com/PatrickNicholas/HiCursorWords.git ~/.vimrc/bundle/vim-highlight-cursor-words
 
 or a submodule
 
     cd ~/.vim
-    git submodule add https://github.com/pboettch/vim-highlight-cursor-words.git bundle/vim-highlight-cursor-words
+    git submodule add https://github.com/PatrickNicholas/HiCursorWords.git bundle/vim-highlight-cursor-words
+
+or vim-plug
+
+    Plug 'PatrickNicholas/HiCursorWords'
 
 ----------
 

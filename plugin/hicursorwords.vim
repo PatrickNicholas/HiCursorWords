@@ -80,7 +80,7 @@ endif
 
 augroup HiCursorWords
     autocmd!
-    autocmd  CursorMoved,CursorMovedI  *  call s:HiCursorWords__startHilighting()
+    autocmd  CursorMoved,CursorMovedI  *  call s:HiCursorWords__execute()
     autocmd  WinLeave * call s:HiCursorWords__stopHilighting()
 augroup END
 
@@ -112,11 +112,6 @@ function! s:HiCursorWords__getWordUnderTheCursor(linestr, linenum, colnum)
 endfunction
 
 function! s:HiCursorWords__execute()
-    if exists("w:HiCursorWords__matchId")
-        call matchdelete(w:HiCursorWords__matchId)
-        unlet w:HiCursorWords__matchId
-    endif
-
     let linestr = getline('.')
     let linenum = line('.')
     let colnum = col('.')
@@ -126,13 +121,21 @@ function! s:HiCursorWords__execute()
     endif
 
     let word = s:HiCursorWords__getWordUnderTheCursor(linestr, linenum, colnum)
-    if strlen(word) != 0
-        if strlen(g:HiCursorWords_hiGroupRegexp) != 0
-                    \ && match(s:HiCursorWords__getHiName(linenum, colnum), g:HiCursorWords_hiGroupRegexp) == -1
+    if strlen(word) == 0 || strlen(g:HiCursorWords_hiGroupRegexp) != 0
+        \ && match(s:HiCursorWords__getHiName(linenum, colnum), g:HiCursorWords_hiGroupRegexp) == -1
+        call s:HiCursorWords__stopHilighting()
+        return
+    endif
+
+    if exists("w:HiCursorWords__matchWord")
+        if w:HiCursorWords__matchWord == word
             return
         endif
-        let w:HiCursorWords__matchId = matchadd('WordUnderTheCursor', word, 0)
     endif
+
+    call s:HiCursorWords__stopHilighting()
+    let w:HiCursorWords__matchWord = word
+    call s:HiCursorWords__startHilighting()
 endfunction
 
 function! s:HiCursorWords__startHilighting()
@@ -140,10 +143,23 @@ function! s:HiCursorWords__startHilighting()
     let &updatetime = g:HiCursorWords_delay
     augroup HiCursorWordsUpdate
         autocmd!
-        autocmd CursorHold,CursorHoldI  *
-                    \ if exists('b:HiCursorWords__oldUpdatetime') | let &updatetime = b:HiCursorWords__oldUpdatetime | endif
-                    \ | call s:HiCursorWords__execute()
+        autocmd CursorHold,CursorHoldI  * call s:HiCursorWords__updateMatch()
     augroup END
+endfunction
+
+function! s:HiCursorWords__updateMatch()
+    if exists('b:HiCursorWords__oldUpdatetime')
+       let &updatetime = b:HiCursorWords__oldUpdatetime
+    endif
+    if exists('w:HiCursorWords__matchWord')
+        " ensure there only one match id, othewise some match
+        " highlight will lost.
+        if exists("w:HiCursorWords__matchId")
+            call matchdelete(w:HiCursorWords__matchId)
+            unlet w:HiCursorWords__matchId
+        endif
+        let w:HiCursorWords__matchId = matchadd('WordUnderTheCursor', w:HiCursorWords__matchWord, 0)
+    endif
 endfunction
 
 " Steven Lu: Add functionality to prevent the HCW styles being present in
@@ -154,6 +170,7 @@ function! s:HiCursorWords__stopHilighting()
         call matchdelete(w:HiCursorWords__matchId)
         unlet w:HiCursorWords__matchId
     endif
+    unlet! w:HiCursorWords__matchWord
 endfunction
 
 function! HiCursorWords_toggle()
